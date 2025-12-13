@@ -1,0 +1,64 @@
+/* Sidebar */
+.ant-layout-sider {
+    background-color: #2F3142 !important;
+}
+
+.ant-menu-dark .ant-menu-item,
+.ant-menu-dark .ant-menu-submenu-title {
+    color: #E0E0E0;
+    font-weight: 500;
+}
+
+.ant-menu-dark .ant-menu-item:hover,
+.ant-menu-dark .ant-menu-submenu-title:hover {
+    background-color: #3B3E58 !important;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+    background-color: #5561A8 !important;
+    color: #FFFFFF !important;
+}
+
+/* Header */
+.ant-layout-header {
+    background-color: #F9FAFB !important;
+    color: #333333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+}
+
+/* Content */
+.ant-layout-content {
+    background-color: #F5F6FA;
+    padding: 24px;
+    min-height: calc(100vh - 64px);
+}
+
+/* Buttons (Antd) */
+.ant-btn-primary {
+    background-color: #4C6EF5;
+    border-color: #4C6EF5;
+}
+
+.ant-btn-primary:hover {
+    background-color: #6579F1;
+    border-color: #6579F1;
+}
+
+/* Select Dropdown */
+.ant-select-selector {
+    background-color: #FFFFFF !important;
+    color: #333333 !important;
+}
+
+/* Typography / Labels */
+.label-text {
+    color: #4C6EF5;
+    font-weight: 600;
+}
+
+.normal-text {
+    color: #555555;
+}
