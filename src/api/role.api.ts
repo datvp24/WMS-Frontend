@@ -13,7 +13,7 @@ export const roleApi = {
         http.put(`/Role/${id}`, dto),
 
     delete: (id: number) =>
-        http.delete(`/Role/${id}`),
+        http.delete(`/Role/${id}`), 
 
     assignPermission: (dto: AssignPermissionToRoleDto) =>
         http.post("/Role/assign-permission", dto),
