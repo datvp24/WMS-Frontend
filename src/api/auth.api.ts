@@ -10,4 +10,6 @@ export const authApi = {
 
     assignPermission: (userId: number, permissionId: number) =>
         http.post(`/Auth/assign-permission?userId=${userId}&permissionId=${permissionId}`),
+    getAll: () => http.get("/Role"),
+    
 };

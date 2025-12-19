@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 
 import Login from "../pages/auth/Login";
-
+import Blocked from "../pages/auth/Block";
 import AdminLayout from "../layouts/AdminLayout";
 
 //INVENTORY
@@ -79,6 +79,7 @@ export default function AppRoutes() {
         <Routes>
             {/* Public */}
             <Route path="/login" element={<Login />} />
+            <Route path="/blocked" element={<Blocked />} />
 
             {/* Private layout */}
             <Route element={<PrivateRoute><AdminLayout /></PrivateRoute>}>
@@ -93,6 +94,7 @@ export default function AppRoutes() {
                 <Route path="permissions" element={<PermissionList />} />
                 <Route path="permissions/create" element={<PermissionCreate />} />
                 <Route path="permissions/edit/:id" element={<PermissionEdit />} />
+                
 
                 {/* AUTH */}
                 <Route path="auth/assign-role" element={<AssignRole />} />

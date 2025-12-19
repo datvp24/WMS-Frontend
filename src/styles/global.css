@@ -1,6 +1,6 @@
 /* Sidebar */
 .ant-layout-sider {
-    background-color: #2F3142 !important;
+    background-color: #20212d !important;
 }
 
 .ant-menu-dark .ant-menu-item,
@@ -12,6 +12,21 @@
 .ant-menu-dark .ant-menu-item:hover,
 .ant-menu-dark .ant-menu-submenu-title:hover {
     background-color: #3B3E58 !important;
+}
+/* styles/global.css hoặc tương tự */
+.ant-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important; /* nền sáng hơn */
+  color: #40a9ff !important; /* chữ đổi màu */
+  font-size: medium;
+}
+
+.ant-menu-submenu-title:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #40a9ff !important;
+  font-size: medium;
+}
+.ant-menu-item, .ant-menu-submenu-title {
+  transition: 10s;
 }
 
 .ant-menu-dark .ant-menu-item-selected {

@@ -98,32 +98,44 @@ export default function RoleList() {
                     },
 
                     {
-                        title: "Actions",
-                        width: 180,
-                        render: (_: unknown, row: RoleDetailDto) => (
-                            <>
-                                <Button
-                                    size="small"
-                                    onClick={() => navigate(`/roles/edit/${row.id}`)}
-                                >
-                                    Edit
-                                </Button>
+    title: "Actions",
+    width: 240,
+    render: (_: unknown, row: RoleDetailDto) => (
+        <>
+            <Button
+                size="small"
+                onClick={() => navigate(`/roles/edit/${row.id}`)}
+            >
+                Edit
+            </Button>
 
-                                <Popconfirm
-                                    title="Are you sure you want to delete?"
-                                    onConfirm={() => handleDelete(row.id)}
-                                >
-                                    <Button
-                                        danger
-                                        size="small"
-                                        style={{ marginLeft: 8 }}
-                                    >
-                                        Delete
-                                    </Button>
-                                </Popconfirm>
-                            </>
-                        ),
-                    },
+            <Button
+                size="small"
+                type="dashed"
+                style={{ marginLeft: 8 }}
+                onClick={() =>
+                    navigate(`/roles/assign-permission/${row.id}`)
+                }
+            >
+                Assign Permission
+            </Button>
+
+            <Popconfirm
+                title="Are you sure you want to delete?"
+                onConfirm={() => handleDelete(row.id)}
+            >
+                <Button
+                    danger
+                    size="small"
+                    style={{ marginLeft: 8 }}
+                >
+                    Delete
+                </Button>
+            </Popconfirm>
+        </>
+    ),
+},
+
                 ]}
             />
         </>

@@ -1,105 +1,143 @@
-import { Card, Select, Button, message, Table } from "antd";
+import { Card, Select, Checkbox, Button, message, Divider } from "antd";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom"; // <-- import useParams
 import { roleApi } from "../../api/role.api";
 import { permissionApi } from "../../api/permission.api";
 
+interface Permission {
+  id: number;
+  code: string;
+}
+
+interface Role {
+  id: number;
+  roleName: string;
+  permissions: Permission[];
+}
+
 export default function RolePermissionAssign() {
-    const [roles, setRoles] = useState<any[]>([]);
-    const [roleId, setRoleId] = useState<number | null>(null);
+  const { id } = useParams<{ id: string }>(); // lấy role id từ route
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [roleId, setRoleId] = useState<number | null>(id ? Number(id) : null);
 
-    const [role, setRole] = useState<any>(null);
-    const [allPermissions, setAllPermissions] = useState<any[]>([]);
-    const [selected, setSelected] = useState<number | null>(null);
+  const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
+  const [original, setOriginal] = useState<number[]>([]);
+  const [checked, setChecked] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
 
-    const loadData = async () => {
-        setRoles((await roleApi.getAll()).data);
-        setAllPermissions((await permissionApi.getAll()).data);
+  // Load all roles + permissions
+  useEffect(() => {
+    const loadInit = async () => {
+      const [rolesRes, permsRes] = await Promise.all([
+        roleApi.getAll(),
+        permissionApi.getAll(),
+      ]);
+      setRoles(rolesRes.data);
+      setAllPermissions(permsRes.data);
+    };
+    loadInit();
+  }, []);
+
+  // Load role permissions khi roleId thay đổi (bao gồm từ route)
+  useEffect(() => {
+    if (!roleId) return;
+
+    const loadRole = async () => {
+      const res = await roleApi.get(roleId);
+      const permIds = res.data.permissions.map((p: Permission) => p.id);
+
+      setOriginal(permIds);
+      setChecked(permIds);
     };
 
-    const loadRoleDetail = async (id: number) => {
-        setRole((await roleApi.get(id)).data);
-    };
+    loadRole();
+  }, [roleId]);
 
-    useEffect(() => { loadData(); }, []);
+  const onSubmit = async () => {
+    if (!roleId) return;
 
-    // khi chọn role => load permission của nó
-    useEffect(() => {
-        if (roleId) loadRoleDetail(roleId);
-    }, [roleId]);
+    setLoading(true);
 
-    const assign = async () => {
-        if (!roleId) return message.error("Select role first");
-        if (!selected) return message.error("Select permission first");
+    const toAdd = checked.filter(id => !original.includes(id));
+    const toRemove = original.filter(id => !checked.includes(id));
 
-        await roleApi.assignPermission({
-            roleId: roleId,
-            permissionId: selected
-        });
+    try {
+      await Promise.all([
+        ...toAdd.map(pid =>
+          roleApi.assignPermission({ roleId, permissionId: pid })
+        ),
+        ...toRemove.map(pid =>
+          roleApi.removePermission(roleId, pid)
+        ),
+      ]);
 
-        message.success("Assigned");
-        loadRoleDetail(roleId);
-    };
+      message.success("Permissions updated");
+      setOriginal(checked);
+    } catch {
+      message.error("Update failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const remove = async (permId: number) => {
-        if (!roleId) return;
+  return (
+    <Card title="Assign Permissions to Role">
+      {/* Role selector */}
+      <Select
+        style={{ width: 300, marginBottom: 20 }}
+        placeholder="Select role"
+        options={roles.map(r => ({
+          value: r.id,
+          label: r.roleName,
+        }))}
+        value={roleId || undefined} // <-- dropdown tự chọn role hiện tại
+        onChange={setRoleId}
+      />
 
-        await roleApi.removePermission(roleId, permId);
-        message.success("Removed");
-        loadRoleDetail(roleId);
-    };
+      {roleId && (
+        <>
+          <Divider />
 
-    return (
-        <Card title="Assign Permissions to Role">
-            
-            {/* Select Role */}
-            <div style={{ marginBottom: 20 }}>
-                <Select
-                    style={{ width: 300 }}
-                    placeholder="Select role"
-                    onChange={(v) => setRoleId(Number(v))}
-                    options={roles.map(r => ({ value: r.id, label: r.roleName }))}
-                />
-            </div>
-
-            {/* Select Permission */}
-            <Select
-                style={{ width: 300 }}
-                placeholder="Select permission"
-                onChange={(v) => setSelected(Number(v))}
-                options={allPermissions.map(p => ({ value: p.id, label: p.code }))}
-                disabled={!roleId}
-            />
-
-            <Button 
-                type="primary" 
-                style={{ marginLeft: 10 }} 
-                onClick={assign}
-                disabled={!roleId}
+          <Checkbox.Group
+            value={checked}
+            onChange={(v) => setChecked(v as number[])}
+            style={{ width: "100%" }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "12px",
+              }}
             >
-                Add
-            </Button>
+              {allPermissions.map(p => (
+                <div
+                  key={p.id}
+                  style={{
+                    border: "1px solid #d9d9d9",
+                    borderRadius: 6,
+                    padding: "8px 12px",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <Checkbox value={p.id}>{p.code}</Checkbox>
+                </div>
+              ))}
+            </div>
+          </Checkbox.Group>
 
-            {/* Table */}
-            <Table
-                style={{ marginTop: 20 }}
-                dataSource={role?.permissions || []}
-                rowKey="id"
-                columns={[
-                    { title: "ID", dataIndex: "id", width: 80 },
-                    { title: "Permission", dataIndex: "code" },
-                    {
-                        title: "Action",
-                        render: (r: any) => (
-                            <Button 
-                                danger 
-                                onClick={() => remove(r.id)}
-                            >
-                                Remove
-                            </Button>
-                        ),
-                    },
-                ]}
-            />
-        </Card>
-    );
+          <Divider />
+
+          <Button
+            type="primary"
+            loading={loading}
+            onClick={onSubmit}
+          >
+            Save Changes
+          </Button>
+        </>
+      )}
+    </Card>
+  );
 }

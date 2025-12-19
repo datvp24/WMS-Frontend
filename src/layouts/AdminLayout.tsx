@@ -1,6 +1,8 @@
-import { Layout, Menu } from "antd";
-import "../styles/global.css";
+import { Layout, Menu, Button } from "antd";
+import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
+import "../styles/global.css";
+
 import {
   UserOutlined,
   TeamOutlined,
@@ -15,10 +17,26 @@ import {
 const { Sider, Content, Header } = Layout;
 
 export default function AdminLayout() {
+  const [collapsed, setCollapsed] = useState(false); // state thu gọn
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       {/* Sidebar */}
-      <Sider width={240} theme="dark" style={{ overflowY: "auto" }}>
+      <Sider
+        width={240}
+        theme="dark"
+        collapsible
+        collapsed={collapsed}
+        onCollapse={(value) => setCollapsed(value)}
+        style={{
+    overflowY: "auto",
+    position: "fixed",      // cố định
+    left: 0,
+    top: 0,
+    height: "100vh",        // full chiều cao viewport
+    zIndex: 1000,           // đảm bảo nằm trên content
+  }}
+      >
         <div
           style={{
             height: 60,
@@ -30,113 +48,239 @@ export default function AdminLayout() {
             fontWeight: 600,
           }}
         >
-          WMS Admin
+          {collapsed ? "WMS" : "WMS"}
         </div>
 
         <div style={{ height: 'calc(100vh - 60px)', overflowY: 'auto' }}>
+
           <Menu theme="dark" mode="inline">
+
             {/* AUTH */}
+
             <Menu.SubMenu key="auth" icon={<TeamOutlined />} title="AUTH">
+
               <Menu.Item key="auth-assign-role">
+
                 <Link to="/auth/assign-role">Assign Role</Link>
+
               </Menu.Item>
+
               <Menu.Item key="auth-assign-permission">
+
                 <Link to="/auth/assign-permission">Assign Permission</Link>
+
               </Menu.Item>
+
             </Menu.SubMenu>
+
+
 
             {/* USERS */}
+
             <Menu.SubMenu key="users" icon={<UserOutlined />} title="USERS">
+
               <Menu.Item key="users-list">
+
                 <Link to="users">User List</Link>
+
               </Menu.Item>
+
               <Menu.Item key="users-create">
+
                 <Link to="users/create">Create User</Link>
+
               </Menu.Item>
+
             </Menu.SubMenu>
+
+            {/* ROLES */}
+
+            <Menu.SubMenu key="roles" icon={<TeamOutlined />} title="ROLES">
+
+              <Menu.Item key="roles-list">
+
+                <Link to="/roles">Role List</Link>
+
+              </Menu.Item>
+
+              <Menu.Item key="roles-create">
+
+                <Link to="/roles/create">Create Role</Link>
+
+              </Menu.Item>
+
+            </Menu.SubMenu>
+
+            
+
+
+
+             
 
             {/* WAREHOUSE */}
+
             <Menu.SubMenu key="warehouse" icon={<HomeOutlined />} title="WAREHOUSE">
+
               <Menu.Item key="warehouse-list">
+
                 <Link to="/warehouse">Warehouses</Link>
+
               </Menu.Item>
+
               <Menu.Item key="warehouse-create">
+
                 <Link to="/warehouse/create">Create Warehouse</Link>
+
               </Menu.Item>
+
             </Menu.SubMenu>
 
+
+
             {/* LOCATION */}
+
             <Menu.SubMenu key="location" icon={<EnvironmentOutlined />} title="LOCATION">
+
               <Menu.Item key="location-list">
+
                 <Link to="/warehouse/locations">Locations</Link>
+
               </Menu.Item>
+
               <Menu.Item key="location-create">
+
                 <Link to="/warehouse/locations/create">Create Location</Link>
+
               </Menu.Item>
+
             </Menu.SubMenu>
+
             
+
             {/* INVENTORY */}
-<Menu.SubMenu key="inventory" icon={<DatabaseOutlined />} title="INVENTORY">
-  <Menu.Item key="inventory-list">
-    <Link to="/inventory">Inventory List</Link>
-  </Menu.Item>
-  <Menu.Item key="inventory-adjust">
-    <Link to="/inventory/adjust">Adjust Inventory</Link>
-  </Menu.Item>
-  <Menu.Item key="inventory-history">
-    <Link to="/inventory/history">Inventory History</Link>
-  </Menu.Item>
-</Menu.SubMenu>
+
+            <Menu.SubMenu key="inventory" icon={<DatabaseOutlined />} title="INVENTORY">
+
+              <Menu.Item key="inventory-list">
+
+                <Link to="/inventory">Inventory List</Link>
+
+              </Menu.Item>
+
+              <Menu.Item key="inventory-adjust">
+
+                <Link to="/inventory/adjust">Adjust Inventory</Link>
+
+              </Menu.Item>
+
+              <Menu.Item key="inventory-history">
+
+                <Link to="/inventory/history">Inventory History</Link>
+
+              </Menu.Item>
+
+            </Menu.SubMenu>
+
+
+
 
 
             {/* PERMISSIONS */}
+
             <Menu.SubMenu key="permissions" icon={<LockOutlined />} title="PERMISSIONS">
+
               <Menu.Item key="permissions-list">
+
                 <Link to="/permissions">Permission List</Link>
+
               </Menu.Item>
+
               <Menu.Item key="permissions-create">
+
                 <Link to="/permissions/create">Create Permission</Link>
+
               </Menu.Item>
+
             </Menu.SubMenu>
+
+
 
             {/* MASTER DATA */}
+
             <Menu.SubMenu key="master" icon={<AppstoreOutlined />} title="MASTER DATA">
+
               <Menu.Item key="master-brands">
+
                 <Link to="/master/brands">Brands</Link>
+
               </Menu.Item>
+
               <Menu.Item key="master-categories">
+
                 <Link to="category">Categories</Link>
+
               </Menu.Item>
+
               <Menu.Item key="master-units">
+
                 <Link to="unit">Units</Link>
+
               </Menu.Item>
+
               <Menu.Item key="master-suppliers">
+
                 <Link to="supplier">Suppliers</Link>
+
               </Menu.Item>
+
               <Menu.Item key="master-customers">
+
                 <Link to="customer">Customers</Link>
+
               </Menu.Item>
+
               <Menu.Item key="master-products">
+
                 <Link to="product">Products</Link>
+
               </Menu.Item>
+
             </Menu.SubMenu>
 
+
+
                         {/* PURCHASE */}
+
             <Menu.SubMenu key="Purchase" icon= {<ShoppingCartOutlined/>} title="Purchase">
+
               <Menu.Item>
+
                 <Link to="purchase">Purchase List</Link>
+
               </Menu.Item>
+
               <Menu.Item>
+
                 <Link to="purchase/form">Purchase Create</Link>
+
               </Menu.Item>
+
               <Menu.Item>
+
                 <Link to="goodsreceipt">GoodsReceipt List</Link>
+
               </Menu.Item>
+
               <Menu.Item>
+
                 <Link to="goodsreceipt/form">GoodsReceipt Create</Link>
+
               </Menu.Item>
+
             </Menu.SubMenu>
+
           </Menu>
+
         </div>
       </Sider>
 
@@ -150,6 +294,13 @@ export default function AdminLayout() {
             alignItems: "center",
           }}
         >
+          <Button
+            type="text"
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ marginRight: 12 }}
+          >
+            {collapsed ? "▶" : "◀"}
+          </Button>
           <h3>Warehouse Management System</h3>
         </Header>
 
