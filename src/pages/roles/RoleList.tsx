@@ -112,7 +112,7 @@ export default function RoleList() {
             <Button
                 size="small"
                 type="dashed"
-                style={{ marginLeft: 8 }}
+                style={{ marginLeft: 8 , marginTop: 8}}
                 onClick={() =>
                     navigate(`/roles/assign-permission/${row.id}`)
                 }
@@ -127,7 +127,7 @@ export default function RoleList() {
                 <Button
                     danger
                     size="small"
-                    style={{ marginLeft: 8 }}
+                    style={{ marginLeft: 8 , marginTop: 8}}
                 >
                     Delete
                 </Button>
