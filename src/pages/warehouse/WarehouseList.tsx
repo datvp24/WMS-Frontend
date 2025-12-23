@@ -177,13 +177,13 @@ export default function WarehouseList() {
             align: "center",
             render: getStatusTag,
           },
-          {
-            title: "Vị trí",
-            dataIndex: "locationCount",
-            width: 90,
-            align: "center",
-            render: (count: number | undefined) => count ?? 0,
-          },
+          // {
+          //   title: "Vị trí",
+          //   dataIndex: "locationCount",
+          //   width: 90,
+          //   align: "center",
+          //   render: (count: number | undefined) => count ?? 0,
+          // },
           {
             title: "Ngày tạo",
             dataIndex: "createdAt",

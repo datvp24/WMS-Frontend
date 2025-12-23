@@ -17,7 +17,7 @@ export default function Login() {
             message.success("Đăng nhập thành công!");
 
             // 🎯 Redirect sang trang Dashboard hoặc Roles
-            navigate("/roles");     // hoặc "/"
+            navigate("/dashboard");     // hoặc "/"
         } catch (err: any) {
             console.error(err);
             message.error("Sai email hoặc mật khẩu!");

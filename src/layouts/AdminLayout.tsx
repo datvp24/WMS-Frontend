@@ -2,6 +2,8 @@ import { Layout, Menu, Button } from "antd";
 import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import "../styles/global.css";
+import { DashboardOutlined } from "@ant-design/icons";
+
 
 import {
   UserOutlined,
@@ -11,7 +13,10 @@ import {
   HomeOutlined,
   ShoppingCartOutlined,
   EnvironmentOutlined,
-  DatabaseOutlined
+  DatabaseOutlined,
+  FileTextOutlined,
+  SwapOutlined,
+  ScanOutlined
 } from "@ant-design/icons";
 
 const { Sider, Content, Header } = Layout;
@@ -28,7 +33,7 @@ export default function AdminLayout() {
       <Sider
         width={siderWidth}
         theme="dark"
-        collapsible
+        // collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         style={{
@@ -56,6 +61,13 @@ export default function AdminLayout() {
 
         <div style={{ height: `calc(100vh - 60px)`, overflowY: "auto" }}>
           <Menu theme="dark" mode="inline" style={{ borderRight: 0 }}>
+
+
+            {/* DASHBOARD */}
+            <Menu.Item key="/" icon={<DashboardOutlined />}>
+              <Link to="/dashboard">Dashboard</Link>
+            </Menu.Item>
+            
             {/* AUTH */}
             <Menu.SubMenu key="auth" icon={<TeamOutlined />} title="AUTH">
               <Menu.Item key="auth-assign-role">
@@ -95,6 +107,22 @@ export default function AdminLayout() {
                 <Link to="/warehouse/create">Create Warehouse</Link>
               </Menu.Item>
             </Menu.SubMenu>
+            {/* TRANSFER */}
+            <Menu.SubMenu key="transfer" icon={< SwapOutlined />} title="TRANSFER">
+              <Menu.Item key="transfer-list">
+                <Link to="/transfer">Transfer List</Link>
+              </Menu.Item>
+              <Menu.Item key="transfer-create">
+                <Link to="/transfer/create">Create Transfer</Link>
+              </Menu.Item>
+            </Menu.SubMenu>
+            
+            {/* STOCKTAKE
+            <Menu.SubMenu key="stocktake" icon={<ScanOutlined />} title="STOCKTAKE">
+              <Menu.Item key="stocktake-list" >
+                <Link to="/stocktake">Stock Take</Link>
+              </Menu.Item>
+            </Menu.SubMenu> */}
 
             {/* LOCATION */}
             <Menu.SubMenu key="location" icon={<EnvironmentOutlined />} title="LOCATION">
@@ -152,20 +180,47 @@ export default function AdminLayout() {
             </Menu.SubMenu>
 
             {/* PURCHASE */}
-            <Menu.SubMenu key="Purchase" icon={<ShoppingCartOutlined />} title="Purchase">
-              <Menu.Item>
-                <Link to="purchase">Purchase List</Link>
-              </Menu.Item>
-              <Menu.Item>
-                <Link to="purchase/form">Purchase Create</Link>
-              </Menu.Item>
-              <Menu.Item>
-                <Link to="goodsreceipt">GoodsReceipt List</Link>
-              </Menu.Item>
-              <Menu.Item>
-                <Link to="goodsreceipt/form">GoodsReceipt Create</Link>
-              </Menu.Item>
-            </Menu.SubMenu>
+<Menu.SubMenu key="purchase" icon={<ShoppingCartOutlined />} title="PURCHASE">
+  <Menu.Item key="purchase-list">
+    <Link to="/purchase">Purchase List</Link>
+  </Menu.Item>
+  <Menu.Item key="purchase-create">
+    <Link to="/purchase/form">Create Purchase</Link>
+  </Menu.Item>
+  <Menu.Divider />
+  <Menu.Item key="gr-list">
+    <Link to="/goodsreceipt">Goods Receipt List</Link>
+  </Menu.Item>
+  <Menu.Item key="gr-create">
+    <Link to="/goodsreceipt/form">Create Goods Receipt</Link>
+  </Menu.Item>
+</Menu.SubMenu>
+
+{/* SALES */}
+<Menu.SubMenu key="sales" icon={<FileTextOutlined />} title="SALES">
+  {/* Sale Orders */}
+  <Menu.Item key="sales-orders-list">
+    <Link to="/sales/orders">Sale Orders List</Link>
+  </Menu.Item>
+  <Menu.Item key="sales-orders-create">
+    <Link to="/sales/orders/create">Create Sale Order</Link>
+  </Menu.Item>
+
+
+  <Menu.Divider />
+
+  {/* Goods Issue */}
+  <Menu.Item key="sales-goods-issue-list">
+    <Link to="/sales/goods-issue">Goods Issue List</Link>
+  </Menu.Item>
+  {/* <Menu.Item key="sales-goods-issue-create">
+    <Link to="/sales/goods-issue/create">Create Goods Issue</Link>
+  </Menu.Item> */}
+
+</Menu.SubMenu>
+
+
+
           </Menu>
         </div>
       </Sider>

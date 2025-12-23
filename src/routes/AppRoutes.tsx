@@ -1,50 +1,69 @@
 import { Routes, Route } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
 
+// OTHER
 import Login from "../pages/auth/Login";
 import Blocked from "../pages/auth/Block";
 import AdminLayout from "../layouts/AdminLayout";
+import Dashboard from "../pages/dashboard/dashboard";
 
-//INVENTORY
+// STOCKTAKE
+import StockTakeList from "../pages/stocktake/StockTakeList";
+import StockTakeCounting from "../pages/stocktake/StockTakeCounting"; // ĐÃ SỬA: Import đúng trang Counting
+
+// TRANSFER
+import TransferList from "../pages/transfer/TransferList";
+import TransferCreate from "../pages/transfer/TransferCreate";
+
+// SALES
+import SaleOrderList from "../pages/sales/SaleOrderList";
+import SaleOrderDetail from "../pages/sales/SaleOrderDetail";
+import SaleOrderCreate from "../pages/sales/SaleOrderCreate";
+import GoodsIssueList from "../pages/sales/GoodIssueList";
+import GoodsIssueCreate from "../pages/sales/GoodIssueCreate";
+import GoodsIssueDetail from "../pages/sales/GoodIssueDetail";
+
+// INVENTORY
 import InventoryList from "../pages/inventory/InventoryList";
 import InventoryHistory from "../pages/inventory/InventoryHistory";
 import InventoryAdjustForm from "../pages/inventory/InventoryAdjustForm";
 
 // WAREHOUSE
 import WarehouseList from "../pages/warehouse/WarehouseList";
-import WarehouseCreate from "../pages/warehouse/WarehouseCreate"; // bạn sẽ tạo sau
-import WarehouseEdit from "../pages/warehouse/WarehouseEdit";     // bạn sẽ tạo sau
+import WarehouseCreate from "../pages/warehouse/WarehouseCreate"; 
+import WarehouseEdit from "../pages/warehouse/WarehouseEdit";     
 
 // LOCATION
 import LocationList from "../pages/location/LocationList";
-import LocationCreate from "../pages/location/LocationCreate"; // tạo sau
-import LocationEdit from "../pages/location/LocationEdit";     // tạo sau
+import LocationCreate from "../pages/location/LocationCreate"; 
+import LocationEdit from "../pages/location/LocationEdit";     
 
-//PRODUCT
+// PRODUCT
 import ProductList from "../pages/product/ProductList";
 import ProductForm from "../pages/product/ProductForm";
 
-//CUSTOMER
+// CUSTOMER
 import CustomerForm from "../pages/customer/CustomerForm";
 import CustomerList from "../pages/customer/CustomerList";
 
-//SUPPLIER
+// SUPPLIER
 import SupplierForm from "../pages/supplier/SupplierForm";
 import SupplierList from "../pages/supplier/SupplierList";
 
-//UNIT
+// UNIT
 import UnitList from "../pages/unit/UnitList";
 import UnitForm from "../pages/unit/UnitForm";
 
-//CATEGORY
+// CATEGORY
 import CategoryCreate from "../pages/category/CategoryCreate";
 import CategoryEdit from "../pages/category/CategoryEdit";
 import CategoryList from "../pages/category/CategoryList";
 
-//USER
+// USER
 import UserList from "../pages/user/UserList";
 import UpdateUser from "../pages/user/UpdateUser";
 import CreateUser from "../pages/user/CreateUser";
+
 // ROLES
 import RoleList from "../pages/roles/RoleList";
 import RoleCreate from "../pages/roles/RoleCreate";
@@ -65,14 +84,11 @@ import BrandList from "../pages/brands/BrandList";
 import BrandCreate from "../pages/brands/BrandCreate";
 import BrandEdit from "../pages/brands/BrandEdit";
 
-
-//PURCHASE
+// PURCHASE
 import PurchaseList from "../pages/purchase/PurchaseList";
 import PurchaseForm from "../pages/purchase/PurchaseForm";
 import GRList from "../pages/purchase/GoodsReceiptList";
 import GRCreate from "../pages/purchase/GoodsReceiptCreate";
-
-// TODO: Categories, Units, Suppliers, Customers, Products
 
 export default function AppRoutes() {
     return (
@@ -83,6 +99,7 @@ export default function AppRoutes() {
 
             {/* Private layout */}
             <Route element={<PrivateRoute><AdminLayout /></PrivateRoute>}>
+                <Route path="dashboard" element={<Dashboard />} />
 
                 {/* ROLES */}
                 <Route path="roles" element={<RoleList />} />
@@ -94,7 +111,6 @@ export default function AppRoutes() {
                 <Route path="permissions" element={<PermissionList />} />
                 <Route path="permissions/create" element={<PermissionCreate />} />
                 <Route path="permissions/edit/:id" element={<PermissionEdit />} />
-                
 
                 {/* AUTH */}
                 <Route path="auth/assign-role" element={<AssignRole />} />
@@ -105,7 +121,7 @@ export default function AppRoutes() {
                 <Route path="master/brands/create" element={<BrandCreate />} />
                 <Route path="master/brands/edit/:id" element={<BrandEdit />} />
 
-                {/* USER  */}
+                {/* USER */}
                 <Route path="users" element={<UserList />} />
                 <Route path="users/edit/:id" element={<UpdateUser />} />
                 <Route path="users/create" element={<CreateUser />} />
@@ -131,16 +147,15 @@ export default function AppRoutes() {
                 <Route path="customer/create" element={<CustomerForm mode="create" />} />
 
                 {/* PRODUCT */}
-                <Route path="/product" element={<ProductList />} />
-                <Route path="/product/create" element={<ProductForm />} />
-                <Route path="/product/edit/:id" element={<ProductForm />} />  
+                <Route path="product" element={<ProductList />} />
+                <Route path="product/create" element={<ProductForm />} />
+                <Route path="product/edit/:id" element={<ProductForm />} />  
 
                 {/* INVENTORY */}
                 <Route path="inventory" element={<InventoryList />} />
                 <Route path="inventory/adjust" element={<InventoryAdjustForm />} />
                 <Route path="inventory/:productId/history" element={<InventoryHistory />} />
                 <Route path="inventory/history" element={<InventoryHistory />} />
-
 
                 {/* === WAREHOUSE MODULE === */}
                 <Route path="warehouse" element={<WarehouseList />} />
@@ -153,11 +168,27 @@ export default function AppRoutes() {
                 <Route path="warehouse/:warehouseId?/locations/edit/:id" element={<LocationEdit />} />
 
                 {/* PURCHASE */}
-                <Route path="purchase" element={<PurchaseList />}></Route>
-                <Route path="purchase/form" element={<PurchaseForm />}></Route>
-                <Route path="goodsreceipt" element={<GRList />}></Route>
-                <Route path="goodsreceipt/form" element={<GRCreate />}></Route>
+                <Route path="purchase" element={<PurchaseList />} />
+                <Route path="purchase/form" element={<PurchaseForm />} />
+                <Route path="goodsreceipt" element={<GRList />} />
+                <Route path="goodsreceipt/form" element={<GRCreate />} />
                 
+                {/* SALES */}
+                <Route path="sales/orders" element={<SaleOrderList />} />
+                <Route path="sales/orders/:id" element={<SaleOrderDetail />} />
+                <Route path="sales/orders/create" element={<SaleOrderCreate />} />
+
+                <Route path="sales/goods-issue" element={<GoodsIssueList />} />
+                <Route path="sales/goods-issue/create" element={<GoodsIssueCreate />} />
+                <Route path="sales/goods-issue/:id" element={<GoodsIssueDetail />} />
+
+                {/* TRANSFER */}
+                <Route path="transfer" element={<TransferList />} />
+                <Route path="transfer/create" element={<TransferCreate />} />
+
+                {/* STOCKTAKE */}
+                <Route path="stocktake" element={<StockTakeList />} />
+                <Route path="stocktake/counting/:id" element={<StockTakeCounting />} />
             </Route>
 
             {/* fallback */}

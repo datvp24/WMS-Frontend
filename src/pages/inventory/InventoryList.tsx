@@ -19,12 +19,19 @@ export default function InventoryList() {
   const [locations, setLocations] = useState<{ label: string; value: string }[]>([]);
   const [locationMap, setLocationMap] = useState<Record<string, string>>({});
 
-  // Load all warehouses & locations
+  // =========================
+  // LOAD WAREHOUSE + LOCATION MAP
+  // =========================
   useEffect(() => {
     const fetchAll = async () => {
       try {
         const wRes = await warehouseApi.query(1, 100);
-        setWarehouses(wRes.data.items.map((w) => ({ label: w.name, value: w.id })));
+        setWarehouses(
+          wRes.data.items.map((w: any) => ({
+            label: w.name,
+            value: w.id,
+          }))
+        );
 
         const locMap: Record<string, string> = {};
         for (const w of wRes.data.items) {
@@ -35,29 +42,45 @@ export default function InventoryList() {
         }
         setLocationMap(locMap);
       } catch {
-        message.error("Failed to fetch warehouses/locations");
+        message.error("Failed to fetch warehouses / locations");
       }
     };
+
     fetchAll();
   }, []);
 
-  // Load locations when warehouse filter changes (for dropdown)
-  const handleWarehouseChange = async (id: string) => {
+  // =========================
+  // LOAD LOCATIONS BY WAREHOUSE
+  // =========================
+  const handleWarehouseChange = async (id?: string) => {
     setWarehouseId(id);
     setLocationId(undefined);
+    setLocations([]);
+
+    if (!id) return;
 
     try {
       const res = await locationApi.list(id);
-      setLocations(res.data.map((l: LocationDto) => ({ label: l.code, value: l.id })));
+      setLocations(
+        res.data.map((l: LocationDto) => ({
+          label: l.code,
+          value: l.id,
+        }))
+      );
     } catch {
       message.error("Failed to fetch locations");
     }
   };
 
-  // Fetch inventory data
+  // =========================
+  // FETCH INVENTORY
+  // =========================
   const fetchData = async () => {
     try {
-      const res = await inventoryApi.query({ warehouseId, locationId });
+      const res = await inventoryApi.query({
+        warehouseId,
+        locationId,
+      });
       setData(res.data);
     } catch {
       message.error("Failed to fetch inventory");
@@ -68,13 +91,17 @@ export default function InventoryList() {
     fetchData();
   }, [warehouseId, locationId]);
 
+  // =========================
+  // TABLE COLUMNS
+  // =========================
   const columns = [
     { title: "Inventory ID", dataIndex: "id", key: "id" },
     {
       title: "Warehouse",
       dataIndex: "warehouseId",
       key: "warehouse",
-      render: (id: string) => warehouses.find((w) => w.value === id)?.label || id,
+      render: (id: string) =>
+        warehouses.find((w) => w.value === id)?.label || id,
     },
     {
       title: "Location",
@@ -83,43 +110,74 @@ export default function InventoryList() {
       render: (id: string) => locationMap[id] || id,
     },
     { title: "Product ID", dataIndex: "productId", key: "productId" },
-    { title: "Quantity", dataIndex: "quantity", key: "quantity" },
-    { title: "Locked Quantity", dataIndex: "lockedQuantity", key: "lockedQuantity" },
+
+    // 🔥 DTO mới
     {
-    title: "Action",
-    key: "action",
-    render: (_: any, record: InventoryDto) => (
-      <Button
-        type="link"
-        onClick={() => window.open(`/inventory/${record.productId}/history`, "_blank")}
-      >
-        View History
-      </Button>
-    ),
-  },
+      title: "On Hand",
+      dataIndex: "onHandQuantity",
+      key: "onHandQuantity",
+    },
+    {
+      title: "Locked",
+      dataIndex: "lockedQuantity",
+      key: "lockedQuantity",
+    },
+    {
+      title: "Available",
+      dataIndex: "availableQuantity",
+      key: "availableQuantity",
+    },
+
+    {
+      title: "Action",
+      key: "action",
+      render: (_: any, record: InventoryDto) => (
+        <Button
+          type="link"
+          onClick={() =>
+            window.open(
+              `/inventory/${record.productId}/history`,
+              "_blank"
+            )
+          }
+        >
+          View History
+        </Button>
+      ),
+    },
   ];
 
   return (
     <>
+      {/* FILTER */}
       <div style={{ marginBottom: 16, display: "flex", gap: 8 }}>
         <Select
           placeholder="Warehouse"
-          onChange={handleWarehouseChange}
           allowClear
           style={{ width: 200 }}
           options={warehouses}
+          onChange={handleWarehouseChange}
         />
+
         <Select
           placeholder="Location"
-          onChange={(v) => setLocationId(v)}
           allowClear
           style={{ width: 200 }}
           options={locations}
+          value={locationId}
+          onChange={(v) => setLocationId(v)}
         />
+
         <Button onClick={fetchData}>Filter</Button>
       </div>
 
-      <Table rowKey="id" columns={columns} dataSource={data} />
+      {/* TABLE */}
+      <Table
+        rowKey="id"
+        columns={columns}
+        dataSource={data}
+        pagination={{ pageSize: 20 }}
+      />
     </>
   );
 }

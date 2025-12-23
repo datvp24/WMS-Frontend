@@ -3,10 +3,10 @@ import { Button, Form, InputNumber, Input, Select, message } from "antd";
 import { useEffect, useState } from "react";
 import { warehouseApi } from "../../api/warehouse.api";
 import { locationApi } from "../../api/location.api";
-import { productApi } from "../../api/product.api"; // giả sử bạn có getAll()
+import { productApi } from "../../api/product.api";
+import { inventoryApi } from "../../api/inventory.api";
 import type { WarehouseDto } from "../../types/warehouse";
 import type { Product } from "../../types/product";
-import { inventoryApi } from "../../api/inventory.api";
 
 export default function InventoryAdjustForm() {
   const [form] = Form.useForm();
@@ -15,48 +15,57 @@ export default function InventoryAdjustForm() {
   const [locations, setLocations] = useState<any[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
+  // Backend-supported actions
   const actions = [
     "Receive",
     "Issue",
-    "TransferIn",
-    "TransferOut",
     "AdjustIncrease",
     "AdjustDecrease",
+    "TransferIn",
+    "TransferOut",
     "StockCount",
   ];
 
-  // Load warehouse + product list
+  // Load warehouse + product
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Warehouse: lấy page 1, 100 items
         const whRes = await warehouseApi.query(1, 100);
         setWarehouses(whRes.data.items);
 
-        // Product: giả sử productApi.getAll()
         const prodRes = await productApi.getAll();
         setProducts(prodRes.data);
       } catch {
-        message.error("Failed to fetch warehouses or products");
+        message.error("Failed to fetch master data");
       }
     };
     fetchData();
   }, []);
 
-  // Khi chọn warehouse, load locations
+  // Load locations by warehouse
   const handleWarehouseChange = async (warehouseId: string) => {
     form.setFieldsValue({ locationId: undefined });
     try {
-      const locRes = await locationApi.list(warehouseId);
-      setLocations(locRes.data); // API trả về array
+      const res = await locationApi.list(warehouseId);
+      setLocations(res.data);
     } catch {
       message.error("Failed to fetch locations");
     }
   };
 
+  // Submit
   const onFinish = async (values: any) => {
     try {
-      await inventoryApi.adjust(values); // giả sử bạn có api này
+      await inventoryApi.adjust({
+        warehouseId: values.warehouseId,
+        locationId: values.locationId,
+        productId: values.productId,
+        qtyChange: values.qtyChange,
+        actionType: values.actionType, // ✅ đúng DTO mới
+        refCode: values.refCode,
+        note: values.note,
+      });
+
       message.success("Inventory adjusted successfully");
       form.resetFields();
     } catch {
@@ -69,60 +78,73 @@ export default function InventoryAdjustForm() {
       <Form.Item
         label="Warehouse"
         name="warehouseId"
-        rules={[{ required: true, message: "Please select warehouse" }]}
+        rules={[{ required: true }]}
       >
         <Select
           placeholder="Select warehouse"
           onChange={handleWarehouseChange}
-          options={warehouses.map((w) => ({ label: w.name, value: w.id }))}
+          options={warehouses.map(w => ({
+            label: w.name,
+            value: w.id
+          }))}
         />
       </Form.Item>
 
       <Form.Item
         label="Location"
         name="locationId"
-        rules={[{ required: true, message: "Please select location" }]}
+        rules={[{ required: true }]}
       >
         <Select
           placeholder="Select location"
-          options={locations.map((l) => ({ label: l.name, value: l.id }))}
+          options={locations.map(l => ({
+            label: l.code ?? l.name,
+            value: l.id
+          }))}
         />
       </Form.Item>
 
       <Form.Item
         label="Product"
         name="productId"
-        rules={[{ required: true, message: "Please select product" }]}
+        rules={[{ required: true }]}
       >
         <Select
           placeholder="Select product"
-          options={products.map((p) => ({ label: p.name, value: p.id }))}
+          options={products.map(p => ({
+            label: p.name,
+            value: p.id
+          }))}
         />
       </Form.Item>
 
       <Form.Item
         label="Quantity Change"
         name="qtyChange"
-        rules={[{ required: true, message: "Please enter quantity change" }]}
+        rules={[{ required: true }]}
       >
         <InputNumber style={{ width: "100%" }} />
       </Form.Item>
 
       <Form.Item
         label="Action"
-        name="action"
-        rules={[{ required: true, message: "Please select action" }]}
+        name="actionType"
+        rules={[{ required: true }]}
       >
-        <Select options={actions.map((a) => ({ label: a, value: a }))} />
+        <Select options={actions.map(a => ({ label: a, value: a }))} />
       </Form.Item>
 
       <Form.Item label="Reference Code" name="refCode">
         <Input />
       </Form.Item>
 
+      <Form.Item label="Note" name="note">
+        <Input.TextArea rows={2} />
+      </Form.Item>
+
       <Form.Item>
         <Button type="primary" htmlType="submit">
-          Adjust
+          Adjust Inventory
         </Button>
       </Form.Item>
     </Form>
