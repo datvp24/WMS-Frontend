@@ -32,11 +32,16 @@ interface ItemRowProps {
   name: number;
   rest: any;
   form: ReturnType<typeof Form.useForm>[0];
+  /** Tất cả vị trí của kho nguồn */
   fromLocations: any[];
   toLocations: any[];
   products: any[];
+  /** Map: "locationId-productId" → available qty (gộp nhiều lot) */
   inventoryMap: Record<string, number>;
+  /** Map: "locationId" → tổng available qty mọi sản phẩm */
   locationQtyMap: Record<string, number>;
+  /** Map: "productId" → danh sách locationId có tồn sản phẩm đó */
+  productLocationMap: Record<string, string[]>;
   onRemove: () => void;
   showLabel: boolean;
 }
@@ -50,11 +55,20 @@ function ItemRow({
   products,
   inventoryMap,
   locationQtyMap,
+  productLocationMap,
   onRemove,
   showLabel,
 }: ItemRowProps) {
   const productId      = Form.useWatch(["items", name, "productId"],      form);
   const fromLocationId = Form.useWatch(["items", name, "fromLocationId"], form);
+
+  // ✅ Lọc vị trí nguồn theo sản phẩm đã chọn
+  const filteredFromLocations =
+    productId != null
+      ? fromLocations.filter((l) =>
+          (productLocationMap[String(productId)] ?? []).includes(String(l.id))
+        )
+      : fromLocations;
 
   const mapKey = `${String(fromLocationId)}-${String(productId)}`;
   const availableQty =
@@ -63,6 +77,20 @@ function ItemRow({
       : 0;
 
   const noStock = productId != null && fromLocationId != null && availableQty === 0;
+
+  // ✅ Khi đổi sản phẩm → reset vị trí nguồn và số lượng
+  const handleProductChange = () => {
+    const items = form.getFieldValue("items") ?? [];
+    items[name] = { ...items[name], fromLocationId: undefined, quantity: undefined };
+    form.setFieldsValue({ items });
+  };
+
+  // ✅ Khi đổi vị trí nguồn → reset số lượng
+  const handleFromLocationChange = () => {
+    const items = form.getFieldValue("items") ?? [];
+    items[name] = { ...items[name], quantity: undefined };
+    form.setFieldsValue({ items });
+  };
 
   return (
     <Row gutter={12} align="bottom" style={{ marginBottom: 8 }}>
@@ -75,15 +103,22 @@ function ItemRow({
           name={[name, "productId"]}
           rules={[{ required: true, message: "Chọn sản phẩm" }]}
         >
-          <Select showSearch optionFilterProp="children" placeholder="Chọn sản phẩm">
+          <Select
+            showSearch
+            optionFilterProp="children"
+            placeholder="Chọn sản phẩm"
+            onChange={handleProductChange}
+          >
             {products.map((p) => (
-              <Select.Option key={p.id} value={p.id}>{p.name}</Select.Option>
+              <Select.Option key={p.id} value={p.id}>
+                {p.name}
+              </Select.Option>
             ))}
           </Select>
         </Form.Item>
       </Col>
 
-      {/* ── Vị trí nguồn ── */}
+      {/* ── Vị trí nguồn — chỉ hiện vị trí có sản phẩm đó ── */}
       <Col span={7}>
         <Form.Item
           {...rest}
@@ -94,16 +129,32 @@ function ItemRow({
           <Select
             showSearch
             optionFilterProp="label"
-            placeholder="Chọn vị trí"
+            placeholder={
+              productId == null
+                ? "Chọn sản phẩm trước"
+                : filteredFromLocations.length === 0
+                ? "Không có vị trí nào có hàng"
+                : "Chọn vị trí"
+            }
+            disabled={productId == null}
             popupMatchSelectWidth={false}
             style={{ width: "100%" }}
             optionLabelProp="label"
+            onChange={handleFromLocationChange}
           >
-            {fromLocations.map((l) => {
-              const qty = locationQtyMap[String(l.id)] ?? 0;
+            {filteredFromLocations.map((l) => {
+              const key = `${String(l.id)}-${String(productId)}`;
+              const qty = inventoryMap[key] ?? 0;
               return (
                 <Select.Option key={l.id} value={l.id} label={l.code ?? l.name}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: 8,
+                    }}
+                  >
                     <span>{l.code ?? l.name}</span>
                     <Tag
                       color={qty > 0 ? "blue" : "default"}
@@ -125,7 +176,25 @@ function ItemRow({
           {...rest}
           label={showLabel ? "Vị trí đích" : undefined}
           name={[name, "toLocationId"]}
-          rules={[{ required: true, message: "Chọn vị trí đích" }]}
+          rules={[
+            { required: true, message: "Chọn vị trí đích" },
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                const fromWarehouseId = getFieldValue("fromWarehouseId");
+                const toWarehouseId   = getFieldValue("toWarehouseId");
+                const fromLoc         = getFieldValue(["items", name, "fromLocationId"]);
+                if (
+                  fromWarehouseId === toWarehouseId &&
+                  value &&
+                  fromLoc &&
+                  value === fromLoc
+                ) {
+                  return Promise.reject("Vị trí đích không được trùng vị trí nguồn.");
+                }
+                return Promise.resolve();
+              },
+            }),
+          ]}
         >
           <Select
             showSearch
@@ -135,7 +204,9 @@ function ItemRow({
             style={{ width: "100%" }}
           >
             {toLocations.map((l) => (
-              <Select.Option key={l.id} value={l.id}>{l.code ?? l.name}</Select.Option>
+              <Select.Option key={l.id} value={l.id}>
+                {l.code ?? l.name}
+              </Select.Option>
             ))}
           </Select>
         </Form.Item>
@@ -155,14 +226,11 @@ function ItemRow({
                   </Text>
                 )}
               </span>
-            ) : (
-              // label ẩn ở dòng 2+ nhưng vẫn hiển thị KD
-              availableQty > 0 ? (
-                <Text type="secondary" style={{ fontWeight: 400, fontSize: 12 }}>
-                  KD: {availableQty}
-                </Text>
-              ) : undefined
-            )
+            ) : availableQty > 0 ? (
+              <Text type="secondary" style={{ fontWeight: 400, fontSize: 12 }}>
+                KD: {availableQty}
+              </Text>
+            ) : undefined
           }
           name={[name, "quantity"]}
           rules={[
@@ -171,8 +239,9 @@ function ItemRow({
               validator(_, val) {
                 if (productId == null || fromLocationId == null)
                   return Promise.resolve();
-                // ✅ Chỉ chặn khi vượt tồn, không chặn khi = 0
-                if (val && Number(val) > availableQty && availableQty > 0)
+                if (!val || Number(val) <= 0)
+                  return Promise.reject("Số lượng phải lớn hơn 0");
+                if (availableQty > 0 && Number(val) > availableQty)
                   return Promise.reject(`Vượt tồn khả dụng (${availableQty})`);
                 return Promise.resolve();
               },
@@ -181,21 +250,21 @@ function ItemRow({
         >
           <InputNumber
             min={0.01}
+            max={availableQty > 0 ? availableQty : undefined}
             style={{
               width: "100%",
-              // ✅ Viền cam khi không có hàng tại vị trí này
               ...(noStock && { borderColor: "#fa8c16" }),
             }}
-            placeholder="0"
+            placeholder={availableQty > 0 ? `Tối đa ${availableQty}` : "0"}
             status={noStock ? "warning" : undefined}
+            disabled={fromLocationId == null}
           />
         </Form.Item>
 
-        {/* ✅ Cảnh báo mềm — không block submit */}
         {noStock && (
           <div style={{ marginTop: -20, marginBottom: 8 }}>
             <Text type="warning" style={{ fontSize: 12 }}>
-              ⚠ Sản phẩm này chưa có tồn tại vị trí đã chọn
+              ⚠ Không có tồn tại vị trí này
             </Text>
           </div>
         )}
@@ -220,12 +289,14 @@ export default function TransferCreateForm({ onSuccess, onCancel }: Props) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const [warehouses,     setWarehouses]     = useState<any[]>([]);
-  const [products,       setProducts]       = useState<any[]>([]);
-  const [fromLocations,  setFromLocations]  = useState<any[]>([]);
-  const [toLocations,    setToLocations]    = useState<any[]>([]);
-  const [inventoryMap,   setInventoryMap]   = useState<Record<string, number>>({});
-  const [locationQtyMap, setLocationQtyMap] = useState<Record<string, number>>({});
+  const [warehouses,        setWarehouses]        = useState<any[]>([]);
+  const [products,          setProducts]          = useState<any[]>([]);
+  const [fromLocations,     setFromLocations]     = useState<any[]>([]);
+  const [toLocations,       setToLocations]       = useState<any[]>([]);
+  const [inventoryMap,      setInventoryMap]      = useState<Record<string, number>>({});
+  const [locationQtyMap,    setLocationQtyMap]    = useState<Record<string, number>>({});
+  // ✅ Map mới: productId → string[] của locationId có tồn > 0
+  const [productLocationMap, setProductLocationMap] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     warehouseApi.query(1, 100).then((res) => setWarehouses(res.data.items || res.data));
@@ -240,24 +311,40 @@ export default function TransferCreateForm({ onSuccess, onCancel }: Props) {
 
     setFromLocations(locRes.data);
 
-    const map:    Record<string, number> = {};
-    const locMap: Record<string, number> = {};
+    const map:        Record<string, number>   = {};
+    const locMap:     Record<string, number>   = {};
+    const prodLocMap: Record<string, string[]> = {};
 
     (invRes.data || []).forEach((inv: any) => {
       const available = (inv.onHandQuantity ?? 0) - (inv.lockedQuantity ?? 0);
-      const key = `${String(inv.locationId)}-${String(inv.productId)}`;
-      map[key] = available;
-      locMap[String(inv.locationId)] =
-        (locMap[String(inv.locationId)] || 0) + available;
+      if (available <= 0) return; // ✅ Bỏ qua row không có tồn
+
+      const locationId = String(inv.locationId);
+      const productId  = String(inv.productId);
+      const key        = `${locationId}-${productId}`;
+
+      // Gộp nhiều lot cùng location+product
+      map[key]    = (map[key]    || 0) + available;
+      locMap[locationId] = (locMap[locationId] || 0) + available;
+
+      // ✅ Ghi nhận: sản phẩm này có tồn ở location nào
+      if (!prodLocMap[productId]) prodLocMap[productId] = [];
+      if (!prodLocMap[productId].includes(locationId)) {
+        prodLocMap[productId].push(locationId);
+      }
     });
 
     setInventoryMap(map);
     setLocationQtyMap(locMap);
+    setProductLocationMap(prodLocMap);
 
+    // Reset fromLocationId & quantity của tất cả items
     form.setFieldsValue({
-      items: form
-        .getFieldValue("items")
-        ?.map((i: any) => ({ ...i, fromLocationId: undefined })),
+      items: (form.getFieldValue("items") ?? []).map((i: any) => ({
+        ...i,
+        fromLocationId: undefined,
+        quantity: undefined,
+      })),
     });
   };
 
@@ -265,9 +352,10 @@ export default function TransferCreateForm({ onSuccess, onCancel }: Props) {
     const res = await locationApi.list(warehouseId);
     setToLocations(res.data);
     form.setFieldsValue({
-      items: form
-        .getFieldValue("items")
-        ?.map((i: any) => ({ ...i, toLocationId: undefined })),
+      items: (form.getFieldValue("items") ?? []).map((i: any) => ({
+        ...i,
+        toLocationId: undefined,
+      })),
     });
   };
 
@@ -354,6 +442,7 @@ export default function TransferCreateForm({ onSuccess, onCancel }: Props) {
                 products={products}
                 inventoryMap={inventoryMap}
                 locationQtyMap={locationQtyMap}
+                productLocationMap={productLocationMap}
                 onRemove={() => remove(name)}
                 showLabel={name === 0}
               />

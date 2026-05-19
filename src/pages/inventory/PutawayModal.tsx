@@ -105,10 +105,15 @@ export default function PutawayModal({
         setFromLocations(fromLocs);
 
         // STORAGE
-        const toLocs = toRes.data.map((l: any) => ({
-          label: l.code,
-          value: l.id,
-        }));
+        const toLocs = toRes.data
+  .filter(
+    (l: any) =>
+      l.type === 2 && l.isActive !== false
+  )
+  .map((l: any) => ({
+    label: l.code,
+    value: l.id,
+  }));
 
         setToLocations(toLocs);
 

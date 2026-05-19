@@ -1,10 +1,9 @@
 import { Layout, Menu, Button } from "antd";
 import { useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import "../styles/global.css";
 import { DashboardOutlined } from "@ant-design/icons";
-
-
+import type{ InventoryChange } from "../types/iinventory";
 import {
   UserOutlined,
   TeamOutlined,
@@ -16,24 +15,38 @@ import {
   DatabaseOutlined,
   FileTextOutlined,
   SwapOutlined,
-  ScanOutlined
 } from "@ant-design/icons";
+import {
+  useInventoryChangeContext,
+} from "../context/InventoryChangeContext";
+
+import InventoryChangeBell from "../features/InventoryChangeBell";
+import { useInventoryChangesWS } from "../hooks/useInventoryChanges";
 
 const { Sider, Content, Header } = Layout;
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
 
   const siderWidth = 240;
   const siderCollapsedWidth = 80;
 
+  // ✅ Poll toàn bộ inventory mỗi 30s
+ 
+const {
+  changes,
+  unreadCount,
+  isPolling,
+  markAllRead,
+  clearChanges,
+} = useInventoryChangeContext();
   return (
     <Layout style={{ minHeight: "100vh" }}>
       {/* Sidebar */}
       <Sider
         width={siderWidth}
         theme="dark"
-        // collapsible
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         style={{
@@ -56,76 +69,57 @@ export default function AdminLayout() {
             fontWeight: 600,
           }}
         >
-          {collapsed ? "WMS" : "WMS"}
+          WMS
         </div>
 
         <div style={{ height: `calc(100vh - 60px)`, overflowY: "auto" }}>
           <Menu theme="dark" mode="inline" style={{ borderRight: 0 }}>
-
-
-            {/* DASHBOARD */}
             <Menu.Item key="/" icon={<DashboardOutlined />}>
               <Link to="/dashboard">Dashboard</Link>
             </Menu.Item>
-            
-            {/* AUTH */}
-            
-            {/* USERS */}
+
             <Menu.SubMenu key="users" icon={<UserOutlined />} title="USERS">
               <Menu.Item key="users-list">
                 <Link to="users">User List</Link>
               </Menu.Item>
             </Menu.SubMenu>
 
-            {/* ROLES */}
             <Menu.SubMenu key="roles" icon={<TeamOutlined />} title="ROLES">
               <Menu.Item key="roles-list">
                 <Link to="/roles">Role List</Link>
               </Menu.Item>
             </Menu.SubMenu>
 
-            {/* WAREHOUSE */}
             <Menu.SubMenu key="warehouse" icon={<HomeOutlined />} title="WAREHOUSE">
               <Menu.Item key="warehouse-list">
                 <Link to="/warehouse">Warehouses</Link>
               </Menu.Item>
             </Menu.SubMenu>
-            {/* TRANSFER */}
-            <Menu.SubMenu key="transfer" icon={< SwapOutlined />} title="TRANSFER">
+
+            <Menu.SubMenu key="transfer" icon={<SwapOutlined />} title="TRANSFER">
               <Menu.Item key="transfer-list">
                 <Link to="/transfer">Transfer List</Link>
               </Menu.Item>
             </Menu.SubMenu>
-            
-            {/* STOCKTAKE
-            <Menu.SubMenu key="stocktake" icon={<ScanOutlined />} title="STOCKTAKE">
-              <Menu.Item key="stocktake-list" >
-                <Link to="/stocktake">Stock Take</Link>
-              </Menu.Item>
-            </Menu.SubMenu> */}
 
-            {/* LOCATION */}
             <Menu.SubMenu key="location" icon={<EnvironmentOutlined />} title="LOCATION">
               <Menu.Item key="location-list">
                 <Link to="/warehouse/locations">Locations</Link>
               </Menu.Item>
             </Menu.SubMenu>
 
-            {/* INVENTORY */}
             <Menu.SubMenu key="inventory" icon={<DatabaseOutlined />} title="INVENTORY">
               <Menu.Item key="inventory-list">
                 <Link to="/inventory">Inventory List</Link>
               </Menu.Item>
             </Menu.SubMenu>
 
-            {/* PERMISSIONS */}
             <Menu.SubMenu key="permissions" icon={<LockOutlined />} title="PERMISSIONS">
               <Menu.Item key="permissions-list">
                 <Link to="/permissions">Permission List</Link>
               </Menu.Item>
             </Menu.SubMenu>
 
-            {/* MASTER DATA */}
             <Menu.SubMenu key="master" icon={<AppstoreOutlined />} title="MASTER DATA">
               <Menu.Item key="master-brands">
                 <Link to="/master/brands">Brands</Link>
@@ -147,40 +141,17 @@ export default function AdminLayout() {
               </Menu.Item>
             </Menu.SubMenu>
 
-            {/* PURCHASE */}
-<Menu.SubMenu key="purchase" icon={<ShoppingCartOutlined />} title="NHẬP HÀNG">
-  {/* <Menu.Item key="purchase-list">
-    <Link to="/purchase">Purchase List</Link>
-  </Menu.Item> */}
+            <Menu.SubMenu key="purchase" icon={<ShoppingCartOutlined />} title="NHẬP HÀNG">
+              <Menu.Item key="gr-list">
+                <Link to="/goodsreceipt">DANH SÁCH ĐƠN NHẬP</Link>
+              </Menu.Item>
+            </Menu.SubMenu>
 
-  <Menu.Divider />
-  <Menu.Item key="gr-list">
-    <Link to="/goodsreceipt">DANH SÁCH ĐƠN NHẬP</Link>
-  </Menu.Item>
-
-</Menu.SubMenu>
-
-{/* SALES */}
-<Menu.SubMenu key="sales" icon={<FileTextOutlined />} title="XUẤT HÀNG">
-  {/* Sale Orders */}
-  {/* <Menu.Item key="sales-orders-list">
-    <Link to="/sales/orders">Sale Orders List</Link>
-  </Menu.Item> */}
-
-  <Menu.Divider />
-
-  {/* Goods Issue */}
-  <Menu.Item key="sales-goods-issue-list">
-    <Link to="/sales/goods-issue">DANH SÁCH ĐƠN XUẤT</Link>
-  </Menu.Item>
-  {/* <Menu.Item key="sales-goods-issue-create">
-    <Link to="/sales/goods-issue/create">Create Goods Issue</Link>
-  </Menu.Item> */}
-
-</Menu.SubMenu>
-
-
-
+            <Menu.SubMenu key="sales" icon={<FileTextOutlined />} title="XUẤT HÀNG">
+              <Menu.Item key="sales-goods-issue-list">
+                <Link to="/sales/goods-issue">DANH SÁCH ĐƠN XUẤT</Link>
+              </Menu.Item>
+            </Menu.SubMenu>
           </Menu>
         </div>
       </Sider>
@@ -195,19 +166,33 @@ export default function AdminLayout() {
         <Header
           style={{
             background: "#fff",
-            padding: 12,
+            padding: "0 16px",
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between", // ✅ space-between để bell nằm phải
+            boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
           }}
         >
-          <Button
-            type="text"
-            onClick={() => setCollapsed(!collapsed)}
-            style={{ marginRight: 12 }}
-          >
-            {collapsed ? "▶" : "◀"}
-          </Button>
-          <h3>Warehouse Management System</h3>
+          {/* Trái: toggle + title */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Button
+              type="text"
+              onClick={() => setCollapsed(!collapsed)}
+            >
+              {collapsed ? "▶" : "◀"}
+            </Button>
+            <h3 style={{ margin: 0 }}>Warehouse Management System</h3>
+          </div>
+
+          {/* Phải: Bell notification */}
+          <InventoryChangeBell
+            changes={changes}
+            unreadCount={unreadCount}
+            isPolling={isPolling}
+            onMarkAllRead={markAllRead}
+            onClear={clearChanges}
+            onNavigateToInventory={() => navigate("/inventory")}
+          />
         </Header>
 
         <Content
